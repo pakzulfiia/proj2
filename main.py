@@ -1,0 +1,52 @@
+import flet as ft
+from db import main_db
+
+def main(page: ft.Page):
+    page.theme_mode = ft.ThemeMode.LIGHT
+
+    task_list = ft.Column()
+    
+    def view_tasks(task_id, task_text):
+        
+        def enable_edit(e):
+            if task_field.read_only == True:
+                task_field.read_only = False
+            else:
+                task_field.read_only = True
+
+        def save_task(e):
+            main_db.update_task(task_id=task_id, new_task=task_field.value)
+            task_field.read_only = True
+
+        def delete_task_db(e):
+            main_db.delete_task(task_id=task_id)
+            task_list.controls.remove(task_row)
+
+
+        delete_btn = ft.IconButton(icon=ft.Icons.DELETE, on_click=delete_task_db)
+        saved_btn = ft.IconButton(icon=ft.Icons.SAVE, on_click=save_task)
+        task_field = ft.TextField(read_only=True, value=task_text, expand=True)
+        edit_btn = ft.IconButton(icon=ft.Icons.EDIT, on_click=enable_edit)
+
+        task_row = ft.Row([task_field, edit_btn, saved_btn, delete_btn])
+        return task_row
+
+    def add_task_db(e):
+        if task_input.value:
+            task = task_input.value
+            task_id = main_db.add_task(task=task)
+            print(f'Задача {task} добавлена - его id {task_id}')
+            task_list.controls.append(view_tasks(task_id=task_id, task_text=task))
+            task_input.value = " "
+
+
+    task_input = ft.TextField(label="Enter task: ", expand=True, on_submit=add_task_db)
+    task_button = ft.IconButton(icon=ft.Icons.ADD, on_click=add_task_db)
+
+    send_task = ft.Row([task_input, task_button])
+
+    page.add(send_task, task_list)
+
+if __name__ == "__main__":
+    main_db.init_db()
+    ft.run(main, view=ft.AppView.WEB_BROWSER)
