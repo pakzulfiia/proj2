@@ -5,8 +5,24 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.LIGHT
 
     task_list = ft.Column()
+
+    filter_type = 'all'
+
+    def load_tasks():
+        task_list.controls.clear() #  всегда очищать перед добавлением
+        for task_id, task_text, complited in main_db.get_tasks(filter_type=filter_type):
+            task_list.controls.append(view_tasks(
+                task_id=task_id, 
+                task_text=task_text,
+                complited=complited
+                ))
+
     
-    def view_tasks(task_id, task_text):
+    def view_tasks(task_id, task_text, complited=None):
+
+        check_box = ft.Checkbox(
+            value=bool(complited), 
+            on_change=lambda e: toggle_task(task_id=task_id, is_complited=e.control.value))
         
         def enable_edit(e):
             if task_field.read_only == True:
@@ -28,8 +44,15 @@ def main(page: ft.Page):
         task_field = ft.TextField(read_only=True, value=task_text, expand=True)
         edit_btn = ft.IconButton(icon=ft.Icons.EDIT, on_click=enable_edit)
 
-        task_row = ft.Row([task_field, edit_btn, saved_btn, delete_btn])
+        task_row = ft.Row([check_box, task_field, edit_btn, saved_btn, delete_btn])
         return task_row
+
+    def toggle_task(task_id, is_complited):
+        print(is_complited)
+        main_db.update_complited(
+            task_id=task_id,
+            complited=is_complited
+        )
 
     def add_task_db(e):
         if task_input.value:
@@ -45,7 +68,29 @@ def main(page: ft.Page):
 
     send_task = ft.Row([task_input, task_button])
 
-    page.add(send_task, task_list)
+    def delete_complited(e):
+        main_db.delete_complited_task()
+        load_tasks()
+
+    def set_filter(filter_value):
+        nonlocal filter_type 
+        filter_type = filter_value
+        load_tasks()
+
+    delete_complited_btn = ft.ElevatedButton('Delete complited', on_click=delete_complited, 
+                                             icon=ft.Icons.DELETE, icon_color=ft.Colors.PINK_900)
+
+    filter_btns = ft.Row([
+        ft.ElevatedButton('All tasks', on_click=lambda e: set_filter('all'), 
+                          icon=ft.Icons.ALL_INBOX, icon_color=ft.Colors.BLACK_87),
+        ft.ElevatedButton('Uncomplited', on_click=lambda e: set_filter('uncomplited'), 
+                          icon=ft.Icons.WATCH, icon_color=ft.Colors.YELLOW_300),
+        ft.ElevatedButton('Complited', on_click=lambda e: set_filter('complited'), 
+                          icon=ft.Icons.CHECK_BOX, icon_color=ft.Colors.GREEN_900)
+    ], alignment=ft.MainAxisAlignment.SPACE_AROUND)
+
+    page.add(send_task, filter_btns, delete_complited_btn, task_list)
+    load_tasks()
 
 if __name__ == "__main__":
     main_db.init_db()

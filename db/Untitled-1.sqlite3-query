@@ -1,18 +1,6 @@
 -- database: ./todo.db
 
--- Use the ▷ button in the top right corner to run the entire file.
+SELECT * FROM tasks
+ORDER BY `task` ASC;
 
-SELECT * FROM tasks;
-
-
-CREATE TABLE IF NOT EXISTS test(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    number INTEGER NOT NULL
-);
-
-INSERT INTO test(name, number)
-VALUES('Nazar', 0123);
-
-UPDATE test SET name = 'Artur' WHERE id = 1;
-
+ALTER TABLE test ADD COLUMN completed INT DEFAULT 0;
