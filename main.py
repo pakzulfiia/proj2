@@ -10,12 +10,16 @@ def main(page: ft.Page):
 
     def load_tasks():
         task_list.controls.clear() #  всегда очищать перед добавлением
-        for task_id, task_text, complited in main_db.get_tasks(filter_type=filter_type):
-            task_list.controls.append(view_tasks(
-                task_id=task_id, 
-                task_text=task_text,
-                complited=complited
-                ))
+        tasks = main_db.get_tasks(filter_type=filter_type)
+        if not tasks: 
+            task_list.controls.append(ft.Text("Список задач пуст",color=ft.Colors.PURPLE_900))
+        else:
+            for task_id, task_text, complited in tasks:
+                task_list.controls.append(view_tasks(
+                    task_id=task_id, 
+                    task_text=task_text,
+                    complited=complited
+                    ))
 
     
     def view_tasks(task_id, task_text, complited=None):
@@ -54,6 +58,7 @@ def main(page: ft.Page):
             complited=is_complited
         )
 
+
     def add_task_db(e):
         if task_input.value:
             task = task_input.value
@@ -67,6 +72,16 @@ def main(page: ft.Page):
     task_button = ft.IconButton(icon=ft.Icons.ADD, on_click=add_task_db)
 
     send_task = ft.Row([task_input, task_button])
+
+    
+    def thememode(e):
+        if page.theme_mode == ft.ThemeMode.LIGHT:
+            page.theme_mode = ft.ThemeMode.DARK
+
+        else:
+            page.theme_mode = ft.ThemeMode.LIGHT
+
+    theme_btn = ft.IconButton(icon=ft.Icons.BRIGHTNESS_7, on_click=thememode)
 
     def delete_complited(e):
         main_db.delete_complited_task()
@@ -89,7 +104,7 @@ def main(page: ft.Page):
                           icon=ft.Icons.CHECK_BOX, icon_color=ft.Colors.GREEN_900)
     ], alignment=ft.MainAxisAlignment.SPACE_AROUND)
 
-    page.add(send_task, filter_btns, delete_complited_btn, task_list)
+    page.add(send_task, filter_btns, delete_complited_btn, theme_btn, task_list)
     load_tasks()
 
 if __name__ == "__main__":
